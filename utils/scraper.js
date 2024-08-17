@@ -6,10 +6,8 @@ import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import connectDB from "../config/db.js"; // Import the database connection
 import Article from "../models/Article.js";
-
 // Define the URL to scrape
-const url = "https://tailwindcss.com/"; // Replace with the URL you want to scrape
-
+const url = "https://alihamzakamboh.com/"; // Replace with the URL you want to scrape
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const userId = "randomuser";
@@ -40,7 +38,7 @@ async function scrapeData(url, userId) {
 
     // Extract specific data (e.g., text from <div> elements) and save to a JSON file in the data directory
     const data = [];
-    $(".mx-auto").each((i, elem) => {
+    $("div").each((i, elem) => {
       const text = $(elem).text().trim(); // Trim whitespace
       if (text) {
         data.push({ text });
@@ -76,3 +74,5 @@ async function scrapeData(url, userId) {
 connectDB().then(() => {
   scrapeData(url, userId);
 });
+
+
