@@ -1,66 +1,106 @@
 import { NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
 import connectDB from '../../lib/dbConnect';
 import Article from '../../models/articleModel';
+import fetch from 'node-fetch';
+import { load } from 'cheerio';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-export async function POST(req: Request) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const dataDir = path.join(__dirname, '../../data');
+
+// Ensure the data directory exists
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
+}
+
+export async function GET(req: Request): Promise<NextResponse> {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required.' }, { status: 400 });
+  }
+
+  try {
+    await connectDB();
+    const articles = await Article.find({ userId }).sort({ createdAt: -1 }).exec();
+
+    if (!articles || articles.length === 0) {
+      return NextResponse.json({ message: 'No data found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ data: articles });
+  } catch (error: any) {
+    console.error('Error fetching data:', error.message);
+    return NextResponse.json({ error: 'Failed to fetch data.' }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request): Promise<NextResponse> {
   try {
     const { url, userId, selector } = await req.json();
 
     await connectDB();
 
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-
-    try {
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 }); // Increased timeout
-      console.log(`Successfully navigated to ${url}`);
-    } catch (navError) {
-      console.error('Navigation error:', navError.message);
-      return NextResponse.json({ error: 'Failed to navigate to the URL' }, { status: 500 });
+    // Fetch the page content using node-fetch
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
     }
 
-    let dataHtml, dataJson;
-    try {
-      dataHtml = await page.content();
-      dataJson = await page.evaluate((selector) => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length === 0) {
-          throw new Error(`No elements found with selector ${selector}`);
-        }
-        return Array.from(elements).map(element => ({
-          tag: element.tagName,
-          content: element.textContent.trim(),
-          class: element.className,
-        }));
-      }, selector); // Process all elements without limit
-      console.log(`Successfully scraped data with selector ${selector}`);
-    } catch (evalError) {
-      console.error('Evaluation error:', evalError.message);
-      return NextResponse.json({ error: `Failed to evaluate the page content with selector ${selector}` }, { status: 500 });
+    const body = await response.text();
+    const $ = load(body);
+
+    // Save the full page content to an HTML file
+    const htmlFilePath = path.join(dataDir, 'data.html');
+    fs.writeFileSync(htmlFilePath, body, 'utf-8');
+    console.log(`Page content saved to ${htmlFilePath}`);
+
+    // Extract specific data using the selector and save to JSON
+    const dataJson: { tag: string | undefined; content: string; class: string; }[] = [];
+    $(selector).each((i, elem) => {
+      const content = $(elem).text().trim();
+      const tag = $(elem).prop('tagName');
+      const className = $(elem).attr('class') || '';
+
+      if (content) {
+        dataJson.push({ tag, content, class: className });
+      }
+    });
+
+    if (dataJson.length === 0) {
+      return NextResponse.json({ error: `No elements found with selector ${selector}` }, { status: 404 });
     }
 
-    await browser.close();
-
+    // Save the extracted data to MongoDB
     const newArticle = new Article({
       userId: userId || 'defaultUser',
       url,
-      dataHtml,
+      dataHtml: body,
       dataJson,
     });
 
     await newArticle.save();
     console.log('Data successfully saved to MongoDB');
 
-    // Ensure the data being sent is in string format for JSON or HTML downloads
     const responseData = {
       dataHtml: newArticle.dataHtml,
       dataJson: newArticle.dataJson,
     };
 
     return NextResponse.json({ message: 'Scraping and storing successful', data: responseData });
-  } catch (error) {
-    console.error('General error during scraping:', error.message);
-    return NextResponse.json({ error: 'Failed to scrape and store data.' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Scraping error:', error.message);
+    if (error.message.includes('Failed to fetch')) {
+      return NextResponse.json({ error: 'Failed to fetch the URL.' }, { status: 500 });
+    } else if (error.message.includes('No elements found')) {
+      return NextResponse.json({ error: 'No elements found with the provided selector.' }, { status: 404 });
+    } else {
+      return NextResponse.json({ error: 'Failed to scrape and store data.' }, { status: 500 });
+    }
   }
 }

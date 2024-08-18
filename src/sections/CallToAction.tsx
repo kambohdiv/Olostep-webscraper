@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 export const CallToAction = () => {
   return (
-     <section className="bg-gradient-to-b from-white to-[#D2DCFF] py-24 overflow-x-clip">
+     <section className="bg-gradient-to-b from-white to-[#D2DCFF] py-24 pb-36 overflow-x-clip">
       <div className="container">
         <div className="max-w-2xl mx-auto px-4 py-8 relative">
         <h2 className="text-4xl md:6xl font-bold tracking-tighter bg-gradient-to-b from-black to-[#001E80] text-transparent bg-clip-text mt-6 text-center"> Sign up for free today </h2>
@@ -23,13 +23,6 @@ export const CallToAction = () => {
         width={360}
         className="absolute -right-[331px] -top-[19px]"
         />
-        </div>
-        <div className="flex gap-2 mt-10 justify-center">
-          <button className="btn btn-primary">Get for free</button>
-          <button className="btn btn-text gap-1">
-            <span>Learn more</span>
-            <ArrowRight className="h-5 w-5" />
-            </button>
         </div>
       </div>
      </section>
