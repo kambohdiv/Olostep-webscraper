@@ -1,7 +1,7 @@
 import React from "react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
-const Header: React.FC = () => {
+const Header = () => {
   return (
     <header className="bg-gradient-to-b from-black to-[#001E80] shadow-md p-4 flex justify-between items-center">
       {/* Logo and Company Name */}
