@@ -2,7 +2,7 @@
 
 ## Meet the Team Behind Spidex 🌟
 
-### Ali Hamza Kamboh
+[### Ali Hamza Kamboh](https://github.com/ahkamboh)
 **Backend Developer**  
 Ali's the maestro behind the scenes, orchestrating the server and database connections to ensure everything runs like a well-oiled machine.
 
