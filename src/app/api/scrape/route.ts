@@ -1,18 +1,9 @@
 // app/api/scrape/route.ts
 import { NextResponse } from "next/server";
-import connectDB from "@/app/lib/dbConnect"; // Adjust based on your alias
+import connectDB from "@/app/lib/dbConnect";
 import Article from "@/app/models/articleModel";
 import fetch from "node-fetch";
 import { load } from "cheerio";
-import path from "path";
-import fs from "fs";
-
-const dataDir = path.join(process.cwd(), "data");
-
-// Ensure the data directory exists
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir);
-}
 
 export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
@@ -69,11 +60,6 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const body = await response.text();
     const $ = load(body);
-
-    // Save the full page content to an HTML file
-    const htmlFilePath = path.join(dataDir, "data.html");
-    fs.writeFileSync(htmlFilePath, body, "utf-8");
-    console.log(`Page content saved to ${htmlFilePath}`);
 
     // Extract specific data using the selector and save to JSON
     const dataJson: {
