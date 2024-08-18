@@ -2,7 +2,7 @@
 
 ## Meet the Team Behind Spidex 🌟
 
-[### Ali Hamza Kamboh](https://github.com/ahkamboh)
+### Ali Hamza Kamboh
 **Backend Developer**  
 Ali's the maestro behind the scenes, orchestrating the server and database connections to ensure everything runs like a well-oiled machine.
 
@@ -57,4 +57,6 @@ Ideal for data scientists, analysts, and businesses looking to harness web data 
 ## Get Started 🚀
 
 Ready to scrape? Check out our [website](https://spidex.vercel.app/) and start extracting data like a pro!
+
+## Get to know the  [Developers]](https://linktr.ee/spidexdev) of this project
 
