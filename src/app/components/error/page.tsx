@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 export default function Custom404() {
@@ -9,12 +10,12 @@ export default function Custom404() {
       <p className="text-2xl text-white mt-6">
         Oops! The page you are looking for does not exist.
       </p>
-      <a
-        href="/"
+      <Link
+        href="/scrape"
         className="mt-10 px-8 py-3 bg-white text-black rounded-lg font-medium shadow-lg hover:bg-gray-100 transition duration-300"
       >
         Go Back to Home
-      </a>
+      </Link>
     </div>
   );
 }

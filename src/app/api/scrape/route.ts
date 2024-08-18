@@ -30,7 +30,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     const articles = await Article.find({ userId }).sort({ createdAt: -1 }).exec();
 
     if (!articles || articles.length === 0) {
-      return NextResponse.json({ message: 'No data found' }, { status: 404 });
+      return NextResponse.json({ data: [], message: 'No data available for this user' }, { status: 200 });
     }
 
     return NextResponse.json({ data: articles });
@@ -43,6 +43,10 @@ export async function GET(req: Request): Promise<NextResponse> {
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     const { url, userId, selector } = await req.json();
+
+    if (!url || !userId || !selector) {
+      return NextResponse.json({ error: 'URL, User ID, and Selector are required.' }, { status: 400 });
+    }
 
     await connectDB();
 
@@ -73,7 +77,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     });
 
     if (dataJson.length === 0) {
-      return NextResponse.json({ error: `No elements found with selector ${selector}` }, { status: 404 });
+      throw new Error(`No elements found with selector ${selector}`);
     }
 
     // Save the extracted data to MongoDB
@@ -95,12 +99,6 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ message: 'Scraping and storing successful', data: responseData });
   } catch (error: any) {
     console.error('Scraping error:', error.message);
-    if (error.message.includes('Failed to fetch')) {
-      return NextResponse.json({ error: 'Failed to fetch the URL.' }, { status: 500 });
-    } else if (error.message.includes('No elements found')) {
-      return NextResponse.json({ error: 'No elements found with the provided selector.' }, { status: 404 });
-    } else {
-      return NextResponse.json({ error: 'Failed to scrape and store data.' }, { status: 500 });
-    }
+    return NextResponse.json({ error: error.message || 'Failed to scrape and store data.' }, { status: 500 });
   }
 }

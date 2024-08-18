@@ -5,7 +5,9 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import { DM_Sans } from "next/font/google";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { coy as syntaxStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 config.autoAddCss = false;
 
@@ -13,23 +15,26 @@ const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
 
 const Page: React.FC = () => {
   const { user } = useUser();
-  const router = useRouter(); 
+  const router = useRouter();
   const [url, setUrl] = useState<string>("");
   const [selector, setSelector] = useState<string>("");
-  const [data, setData] = useState<any[]>([]); 
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const userId = user?.id || "";
+  const userName = user?.fullName || "this user"; // Get the user's full name or fallback to "this user"
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+      setMessage(null);
 
       try {
         const response = await fetch(`/api/scrape?userId=${userId}`, {
-          method: "GET", 
+          method: "GET",
         });
 
         if (!response.ok) {
@@ -37,18 +42,14 @@ const Page: React.FC = () => {
         }
 
         const result = await response.json();
-        setData(result.data);
+        if (result.data.length === 0) {
+          setMessage(result.message || `No data available for ${userName}`);
+        } else {
+          setData(result.data);
+        }
       } catch (error: any) {
         console.error("Fetch error:", error);
-
-        if (error.message.includes("405")) {
-          setError("Method Not Allowed: Please check your request method.");
-        } else {
-          setError(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
-          router.push("/components/error"); 
-        }
+        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -57,11 +58,12 @@ const Page: React.FC = () => {
     if (userId) {
       fetchData();
     }
-  }, [userId]);
+  }, [userId, userName]);
 
   const handleScrape = async () => {
     setLoading(true);
     setError(null);
+    setMessage(null);
     setData([]);
 
     try {
@@ -78,28 +80,20 @@ const Page: React.FC = () => {
       });
 
       if (!response.ok) {
-        if (response.status === 404) {
-          router.push("/components/error");
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      } else {
-        const result = await response.json();
-        setData([result.data, ...data]); 
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const result = await response.json();
+      setData([result.data, ...data]);
 
       setUrl("");
       setSelector("");
     } catch (error: any) {
       console.error("Scraping error:", error);
-
-      if (error.message.includes("405")) {
-        setError("Method Not Allowed: Please check your request method.");
+      if (error.message.includes("500")) {
+        router.push("/components/error"); // Redirect to error page
       } else {
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-        router.push("/components/error"); 
+        setError(error.message);
       }
     } finally {
       setLoading(false);
@@ -193,6 +187,12 @@ const Page: React.FC = () => {
             </p>
           )}
 
+          {message && (
+            <div className="mt-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded">
+              {message}
+            </div>
+          )}
+
           {error && (
             <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
               Error: {error}
@@ -206,9 +206,9 @@ const Page: React.FC = () => {
                   <h2 className="text-3xl font-bold text-center mb-6 text-[#010D3E]">
                     Scraped Data {index + 1}
                   </h2>
-                  <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 border border-gray-200 text-[#010D3E] font-mono text-sm">
+                  <SyntaxHighlighter language="json" style={syntaxStyle}>
                     {JSON.stringify(item.dataJson, null, 2)}
-                  </pre>
+                  </SyntaxHighlighter>
                   <div className="mt-6 flex justify-center space-x-4">
                     <button
                       onClick={() => downloadJson(item)}
