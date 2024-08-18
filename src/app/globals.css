@@ -31,3 +31,41 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Apply new custom font globally */
+body,
+input,
+button,
+h1,
+h2,
+pre,
+footer p {
+  font-family: "DM Sans", sans-serif;
+  font-weight: normal;
+}
+
+footer {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+/* Utility class */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .border-gradient {
+    border-image: radial-gradient(
+      ellipse 200% 100% at bottom left,
+      #183ec2,
+      #eaeefe 66%
+    );
+    border-image-slice: 1;
+  }
+}
+
+.cl-internal-1dauvpw, .cl-internal-1hp5nqm {
+  display: none;
+}

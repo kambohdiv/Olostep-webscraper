@@ -11,6 +11,10 @@
   "dependencies": {
     "@clerk/nextjs": "^5.3.1",
     "@clerk/themes": "^2.1.20",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "fortawesome": "^0.0.1-security",
     "mongoose": "^8.5.3",
     "next": "14.2.5",
     "puppeteer": "^23.1.0",
@@ -18,6 +22,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@svgr/webpack": "^8.1.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
